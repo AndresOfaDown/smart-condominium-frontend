@@ -6,6 +6,7 @@ import Dashboard from './features/dashboard/pages/Dashboard';
 import Finances from './features/finances/pages/Finances';
 import Security from './features/security/pages/Security';
 import Users from './features/users/pages/Users';
+import Units from './features/users/pages/UnitsPage';
 import CommonAreas from './features/common-areas/pages/CommonAreas';
 import Communications from './features/communications/pages/Communications';
 import Maintenance from './features/maintenance/pages/Maintenance';
@@ -48,6 +49,7 @@ function AppRoutes() {
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="finances" element={<Finances />} />
         <Route path="users" element={<Users />} />
+        <Route path="units" element={<Units />} />
         <Route path="security" element={<Security />} />
         <Route path="common-areas" element={<CommonAreas />} />
         <Route path="communications" element={<Communications />} />

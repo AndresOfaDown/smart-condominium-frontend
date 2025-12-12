@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { authService } from '../services';
 
 const AuthContext = createContext(null);
 
@@ -15,48 +16,57 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Check if user is logged in (check localStorage or session)
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-            setUser(JSON.parse(storedUser));
-        }
-        setLoading(false);
+        // Check if user is logged in on mount
+        checkAuth();
     }, []);
 
-    const login = async (credentials) => {
+    const checkAuth = async () => {
         try {
-            // TODO: Replace with actual API call to Django backend
-            // const response = await fetch('http://localhost:8000/api/auth/login', {
-            //   method: 'POST',
-            //   headers: { 'Content-Type': 'application/json' },
-            //   body: JSON.stringify(credentials)
-            // });
-            // const data = await response.json();
-
-            // Mock login for now
-            const mockUser = {
-                id: 1,
-                username: credentials.username,
-                email: 'admin@smartcondominio.com',
-                role: 'admin',
-                fullName: 'Administrador',
-            };
-
-            setUser(mockUser);
-            localStorage.setItem('user', JSON.stringify(mockUser));
-            localStorage.setItem('token', 'mock-jwt-token');
-
-            return { success: true, user: mockUser };
+            const token = authService.getToken();
+            if (token) {
+                // Try to get current user from backend
+                const userData = await authService.getCurrentUser();
+                setUser(userData);
+            } else {
+                // Check localStorage for stored user
+                const storedUser = authService.getStoredUser();
+                if (storedUser) {
+                    setUser(storedUser);
+                }
+            }
         } catch (error) {
-            console.error('Login error:', error);
-            return { success: false, error: error.message };
+            console.error('Error checking auth:', error);
+            // If token is invalid, clear everything
+            authService.logout();
+            setUser(null);
+        } finally {
+            setLoading(false);
         }
     };
 
-    const logout = () => {
-        setUser(null);
-        localStorage.removeItem('user');
-        localStorage.removeItem('token');
+    const login = async (credentials) => {
+        try {
+            // Use real backend login
+            const data = await authService.login(credentials.email || credentials.username, credentials.password);
+
+            setUser(data.usuario);
+
+            return { success: true, user: data.usuario };
+        } catch (error) {
+            console.error('Login error:', error);
+            const errorMessage = error.response?.data?.error || error.message || 'Error al iniciar sesión';
+            return { success: false, error: errorMessage };
+        }
+    };
+
+    const logout = async () => {
+        try {
+            await authService.logout();
+        } catch (error) {
+            console.error('Logout error:', error);
+        } finally {
+            setUser(null);
+        }
     };
 
     const value = {
@@ -65,6 +75,7 @@ export const AuthProvider = ({ children }) => {
         logout,
         loading,
         isAuthenticated: !!user,
+        checkAuth,
     };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

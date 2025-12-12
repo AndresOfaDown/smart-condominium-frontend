@@ -6,7 +6,7 @@ import { Lock, Mail } from 'lucide-react';
 import './Login.css';
 
 const Login = () => {
-    const [credentials, setCredentials] = useState({ username: '', password: '' });
+    const [credentials, setCredentials] = useState({ email: '', password: '' });
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const { login } = useAuth();
@@ -17,15 +17,19 @@ const Login = () => {
         setError('');
         setIsLoading(true);
 
-        const result = await login(credentials);
+        try {
+            const result = await login(credentials);
 
-        if (result.success) {
-            navigate('/dashboard');
-        } else {
-            setError(result.error || 'Error al iniciar sesión');
+            if (result.success) {
+                navigate('/dashboard');
+            } else {
+                setError(result.error || 'Error al iniciar sesión');
+            }
+        } catch (err) {
+            setError('Error al conectar con el servidor');
+        } finally {
+            setIsLoading(false);
         }
-
-        setIsLoading(false);
     };
 
     return (
@@ -53,12 +57,12 @@ const Login = () => {
                         )}
 
                         <Input
-                            type="text"
-                            label="Usuario"
-                            placeholder="Ingrese su usuario"
+                            type="email"
+                            label="Email"
+                            placeholder="tu@email.com"
                             icon={<Mail size={18} />}
-                            value={credentials.username}
-                            onChange={(e) => setCredentials({ ...credentials, username: e.target.value })}
+                            value={credentials.email}
+                            onChange={(e) => setCredentials({ ...credentials, email: e.target.value })}
                             required
                         />
 
@@ -79,13 +83,13 @@ const Login = () => {
                             isLoading={isLoading}
                             className="login-button"
                         >
-                            Iniciar Sesión
+                            {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
                         </Button>
                     </form>
 
                     <div className="login-footer">
                         <p className="login-hint">
-                            💡 Usa cualquier usuario y contraseña para acceder (demo)
+                            💡 Usa tu email y contraseña del sistema
                         </p>
                     </div>
                 </Card>
